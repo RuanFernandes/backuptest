@@ -10,19 +10,34 @@ const config = require("./databases.json");
 async function performBackups() {
   try {
     const timestamp = moment().format("HHmmss-DDMMYYYY");
-    const backupsDir = path.join(__dirname, "backups");
-
-    if (!fs.existsSync(backupsDir)) {
-      fs.mkdirSync(backupsDir);
-    }
 
     for (const dbConfig of config.databases) {
       const { user, password, database, host, port } = dbConfig;
 
-      const backupPath = path.join(
-        backupsDir,
-        `${host}-${database}-${timestamp}.sql`
-      );
+      const backupDir = path.join(__dirname, "backups", database);
+
+      // Create the backup directory if it doesn't exist
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      const files = fs.readdirSync(backupDir);
+
+      // Delete the oldest backup if there are already two files present
+      if (files.length >= 2) {
+        const oldestFile = files.reduce((prev, curr) => {
+          const prevPath = path.join(backupDir, prev);
+          const currPath = path.join(backupDir, curr);
+          return fs.statSync(prevPath).birthtimeMs <
+            fs.statSync(currPath).birthtimeMs
+            ? prev
+            : curr;
+        });
+
+        fs.unlinkSync(path.join(backupDir, oldestFile));
+      }
+
+      const backupPath = path.join(backupDir, `${database}-${timestamp}.sql`);
 
       try {
         await createBackup(user, password, host, port, database, backupPath);
