@@ -24,7 +24,7 @@ async function performBackups() {
         `${host}-${database}-${timestamp}.sql`
       );
 
-      await createBackup(user, password, host, port, database, backupPath);
+      await createBackup(user, password, host, port, backupPath);
       console.log(`Backup created for ${database}.`);
     }
   } catch (error) {
@@ -33,16 +33,16 @@ async function performBackups() {
 }
 
 // Create a database backup
-async function createBackup(user, password, host, port, database, backupPath) {
+async function createBackup(user, password, host, port, backupPath) {
   try {
-    // Construct the pg_dump command with the password
-    const command = `PGPASSWORD=${password} pg_dump -U ${user} -h ${host} -p ${port} -Fc -f ${backupPath} ${database}`;
+    // Construct the pg_dumpall command with the password
+    const command = `PGPASSWORD=${password} pg_dumpall -U ${user} -h ${host} -p ${port} -f ${backupPath}`;
 
-    // Execute the pg_dump command
+    // Execute the pg_dumpall command
     await new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
         if (error) {
-          console.error(`Error creating backup for ${database}:`, stderr);
+          console.error("Error creating backup:", stderr);
           reject(error);
         } else {
           resolve();
@@ -50,9 +50,9 @@ async function createBackup(user, password, host, port, database, backupPath) {
       });
     });
 
-    console.log(`Backup created for ${database}.`);
+    console.log("Backup created.");
   } catch (error) {
-    console.error(`Error creating backup for ${database}:`, error);
+    console.error("Error creating backup:", error);
   }
 }
 
