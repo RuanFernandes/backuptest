@@ -24,8 +24,12 @@ async function performBackups() {
         `${host}-${database}-${timestamp}.sql`
       );
 
-      await createBackup(user, password, host, port, database, backupPath);
-      console.log(`Backup created for ${database}.`);
+      try {
+        await createBackup(user, password, host, port, database, backupPath);
+        console.log(`Backup created for ${database}.`);
+      } catch (error) {
+        console.error(`Error creating backup for ${database}:`, error);
+      }
     }
   } catch (error) {
     console.error("Error creating backups:", error);
@@ -34,26 +38,24 @@ async function performBackups() {
 
 // Create a database backup
 async function createBackup(user, password, host, port, database, backupPath) {
-  try {
+  return new Promise((resolve, reject) => {
     // Construct the pg_dump command with the password
     const command = `PGPASSWORD=${password} pg_dump -U ${user} -h ${host} -p ${port} -Fc -f ${backupPath} ${database}`;
 
     // Execute the pg_dump command
-    await new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error creating backup for ${database}:`, stderr);
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
+    const childProcess = exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error creating backup for ${database}:`, stderr);
+        reject(error);
+      } else {
+        resolve();
+      }
     });
 
-    console.log(`Backup created for ${database}.`);
-  } catch (error) {
-    console.error(`Error creating backup for ${database}:`, error);
-  }
+    // Print any command output
+    childProcess.stdout.pipe(process.stdout);
+    childProcess.stderr.pipe(process.stderr);
+  });
 }
 
 // Call the function to perform backups
