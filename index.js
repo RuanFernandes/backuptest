@@ -9,7 +9,7 @@ const config = require("./databases.json");
 // Perform the backup for each database
 async function performBackups() {
   try {
-    const timestamp = moment().format("HHmmss-DDMMYYYY");
+    const timestamp = moment().format("HH_mm_ss-DD_MM_YYYY");
 
     for (const dbConfig of config.databases) {
       const { user, password, database, host, port } = dbConfig;
