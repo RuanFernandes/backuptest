@@ -3,7 +3,6 @@
 Cria backup automatico dos bancos no JSON, formato do json
 ```json
 {
-{
   "databases": [
     {
       "user": "postgres",
